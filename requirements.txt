@@ -1,0 +1,26 @@
+# Data Handling & Math
+numpy
+pandas
+scipy
+tqdm
+
+# Audio Processing (CPU-based extraction)
+librosa
+soundfile
+
+# Visualization & Plotting
+matplotlib
+seaborn
+
+# Deep Learning Framework (PyTorch)
+torch
+torchaudio
+torchvision
+
+# Machine Learning (SVM/Random Forest for the ML baseline)
+scikit-learn
+
+# Advanced Wavelets (Scattering Transform)
+# Add this new line
+PyWavelets
+kymatio
