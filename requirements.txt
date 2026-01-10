@@ -4,6 +4,7 @@ pandas
 matplotlib
 scipy
 tqdm
+opencv-python
 
 # Audio Processing (CPU-based extraction)
 librosa

@@ -208,11 +208,14 @@ __marimo__/
 
 # --- Project Specific ---
 
-# Ignore all data
+# Ignore all data and model checkpoints
 data/
 *.wav
 *.npy
 *.csv
+
+
+
 
 # Ignore virtual environments
 venv/
@@ -220,9 +223,11 @@ env/
 .env
 
 # Ignore models (large files)
+models_checkpoints/
+models_checkpoints_leaky/
 *.h5
 *.pth
-models/
+
 
 # Ignore pycache
 __pycache__/
