@@ -210,7 +210,7 @@ Models are evaluated using:
 ## 📝 Key Findings
 
 * Best feature for 2D CNN (ResNet-18):
-  Mel-Spectrogram > MFCC (91.90%) > CWT > STFT > WST
+  Mel-Spectrogram (Mean accuracy of 91.90%) > MFCC > CWT > STFT > WST
 
 * Data leakage inflates performance by 5–10%.
 
