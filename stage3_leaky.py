@@ -32,7 +32,7 @@ import sys
 # Auto-detect CWT to adjust batch size
 is_cwt = '--feature' in sys.argv and 'cwt' in sys.argv
 BATCH_SIZE = 8 if is_cwt else 32
-EPOCHS = 25 
+EPOCHS = 15
 LEARNING_RATE = 1e-4
 
 def get_class_weights(y_data):
@@ -99,7 +99,7 @@ def main():
     
     print(f"Train Samples: {len(train_idx)} | Val Samples: {len(val_idx)}")
     
-    # --- LEAKAGE CHECK (Will Fail on purpose) ---
+    # --- LEAKAGE CHECK (on purpose) ---
     train_groups = set(groups[train_idx])
     val_groups = set(groups[val_idx])
     overlap = len(train_groups.intersection(val_groups))
@@ -125,9 +125,10 @@ def main():
     weights = get_class_weights(full_dataset.y).to(device)
     criterion = nn.CrossEntropyLoss(weight=weights)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    
     print(f"{'Epoch':<5} | {'Loss':<8} | {'V.Acc':<7} | {'Sens':<7} | {'Spec':<7} | {'F1':<7} | {'M.S&S':<7}")
+    # print(f"{'Epoch':<5} | {'T.Loss':<8} | {'V.Loss':<8} | {'V.Acc':<7} | {'Sens':<7} | {'Spec':<7} | {'F1':<7} | {'M.S&S':<7}")
     print("-" * 75)
+    
 
     for epoch in range(EPOCHS):
         model.train()
@@ -143,6 +144,7 @@ def main():
         avg_train_loss = train_running_loss / len(train_loader)
         v_loss, acc, sens, spec, f1, mss = evaluate(model, val_loader, criterion, device)
         print(f"{epoch+1:<5} | {avg_train_loss:<8.4f} | {acc:<7.4f} | {sens:<7.4f} | {spec:<7.4f} | {f1:<7.4f} | {mss:<7.4f}")
+        # print(f"{epoch+1:<5} | {avg_train_loss:<8.4f} | {v_loss:<8.4f} | {acc:<7.4f} | {sens:<7.4f} | {spec:<7.4f} | {f1:<7.4f} | {mss:<7.4f}")
         
         # Save per epoch
         torch.save(model.state_dict(), os.path.join(SAVE_DIR, f"epoch_{epoch+1}.pth"))
