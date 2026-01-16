@@ -13,6 +13,22 @@ This project uses the **PhysioNet 2016 Heart Sound Dataset**.
 Download it from:
 [https://physionet.org/content/challenge-2016/1.0.0/](https://physionet.org/content/challenge-2016/1.0.0/)
 
+---
+
+## 🧩 Features Compared
+
+Five time–frequency representations are evaluated:
+
+* STFT Spectrogram
+* Mel-Spectrogram
+* MFCC
+* Continuous Wavelet Transform (CWT)
+* Wavelet Scattering Transform (WST)
+
+All features are converted to image-like inputs and classified using ResNet-18.
+
+---
+
 ### 📁 Folder Setup
 
 After downloading, copy the training a,b,c,d,e and f folders from the Physionet 2016 dataset to your cloned repository like below:
@@ -33,22 +49,6 @@ PCG-Heart-Sound-Classification-Thesis/
 ├── .
 └── README.md
 ```
-
----
-
-## 🧩 Features Compared
-
-Five time–frequency representations are evaluated:
-
-* STFT Spectrogram
-* Mel-Spectrogram
-* MFCC
-* Continuous Wavelet Transform (CWT)
-* Wavelet Scattering Transform (WST)
-
-All features are converted to image-like inputs and classified using ResNet-18.
-
----
 
 ## 🛠️ Environment Setup
 
@@ -149,7 +149,7 @@ data/features/scattering.npy
 
 ### Stage 3: Classification (No Leakage Setting)
 
-before stage 3 run: to generate groups.npy for group wise splitting to prevent leakage.
+before stage 3, Run: to generate groups.npy for group wise splitting to prevent leakage.
 ```
 python generate_groups.py
 ```
@@ -202,7 +202,7 @@ Models are evaluated using:
 ## 📝 Key Findings
 
 * Best feature for 2D CNN (ResNet-18):
-  Mel-Spectrogram > MFCC > CWT > STFT > WST
+  Mel-Spectrogram > MFCC (91.90%) > CWT > STFT > WST
 
 * Data leakage inflates performance by 5–10%.
 
