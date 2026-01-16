@@ -214,7 +214,7 @@ data/
 *.npy
 *.csv
 
-
+visualizations/
 
 
 # Ignore virtual environments
