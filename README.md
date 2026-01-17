@@ -181,7 +181,7 @@ replace "feature_name" with: melspec, mfcc, cwt, spectrogram, scattering
 
 replace "architecture_name" with: resnet18, resnet34, resnet50
 
-One at a time. Example: "To run mfcc on resnet18: "python stage3_classification.py --feature mfcc --resnet18"
+One at a time. Example: "To run mfcc on resnet18: "python stage3_classification.py --feature mfcc --arch resnet18"
 
 Models saved in:
 
