@@ -16,7 +16,8 @@ PROCESSED_DATA_PATH = 'data/processed'
 TARGET_SR = 1000
 WINDOW_SECONDS = 5
 # Folders usually found in PhysioNet 2016
-FOLDERS = ['training-a', 'training-b', 'training-c', 'training-d', 'training-e', 'training-f']
+FOLDERS = ['validation']
+# FOLDERS = ['training-a', 'training-b', 'training-c', 'training-d', 'training-e', 'training-f']
 
 def process_dataset():
     # Ensure output directory exists

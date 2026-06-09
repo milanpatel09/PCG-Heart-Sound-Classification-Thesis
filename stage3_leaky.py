@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Subset
-from sklearn.model_selection import train_test_split  # <--- CHANGED: Random Split
+from sklearn.model_selection import StratifiedKFold  
 from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, f1_score
 from tqdm import tqdm
 
@@ -25,11 +25,11 @@ def set_seed(seed=42):
 # CONFIGURATION
 DATA_PATH = 'data/processed'
 FEATURES_PATH = 'data/features'
-MODELS_DIR = 'models_checkpoints_leaky' # <--- Changed folder name to avoid mixing
+MODELS_DIR = 'models_checkpoints/leaky'
 GROUPS_PATH = os.path.join(DATA_PATH, 'groups.npy') 
 
 import sys
-# Auto-detect CWT to adjust batch size
+
 is_cwt = '--feature' in sys.argv and 'cwt' in sys.argv
 BATCH_SIZE = 8 if is_cwt else 32
 EPOCHS = 15
@@ -69,46 +69,48 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--feature', type=str, required=True)
     parser.add_argument('--arch', type=str, default='resnet18', choices=['resnet18', 'resnet34', 'resnet50'])
+    parser.add_argument('--fold', type=int, default=1, help='Which fold to run (1-5)')
     args = parser.parse_args()
     
     feature_name = args.feature.upper()
-    SAVE_DIR = os.path.join(MODELS_DIR, args.arch, args.feature)
+    # Save directory includes architecture and Fold number
+    SAVE_DIR = os.path.join(MODELS_DIR, args.arch, args.feature, f"fold_{args.fold}")
     os.makedirs(SAVE_DIR, exist_ok=True)
     
-    print(f"\n=== Training {args.arch.upper()} on {feature_name} (LEAKY SPLIT) ===")
+    print(f"\n=== Training {args.arch.upper()} on {feature_name} (Fold {args.fold}) ===")
     print(f"Saving checkpoints to: {SAVE_DIR}")
-    print("WARNING: This run allows Data Leakage (Patient mixing).")
     
     feat_path = os.path.join(FEATURES_PATH, args.feature, f"{args.feature}.npy")
     label_path = os.path.join(DATA_PATH, 'y_data.npy')
     
     full_dataset = PCGDataset(feat_path, label_path)
-    # Groups are loaded just to prove leakage exists later
     groups = np.load(GROUPS_PATH)
     
-    # --- CHANGED: Leaky Random Stratified Split ---
-    # This ignores groups and splits randomly across all segments.
-    indices = np.arange(len(full_dataset))
-    train_idx, val_idx = train_test_split(
-        indices, 
-        test_size=0.2, 
-        stratify=full_dataset.y, # Maintains 3:1 ratio
-        shuffle=True, 
-        random_state=42
-    )
+    # --- NEW: Stratified K-Fold ---
+    # This ensures:
+    # 1. leakage
+    # 2. Balanced Classes (Stratified)
+    sgkf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     
+    # Generate the splits and pick the one requested by --fold
+    current_fold = 1
+    train_idx, val_idx = None, None
+    
+    for t_idx, v_idx in sgkf.split(full_dataset.X, full_dataset.y):
+        if current_fold == args.fold:
+            train_idx, val_idx = t_idx, v_idx
+            break
+        current_fold += 1
+        
     print(f"Train Samples: {len(train_idx)} | Val Samples: {len(val_idx)}")
     
-    # --- LEAKAGE CHECK (on purpose) ---
+    # Verification
     train_groups = set(groups[train_idx])
     val_groups = set(groups[val_idx])
-    overlap = len(train_groups.intersection(val_groups))
-    
-    if overlap > 0:
-        print(f"⚠️  LEAKAGE CONFIRMED: {overlap} patients are in BOTH Train and Val.")
-        print("    (This allows the model to 'cheat' by recognizing background noise.)")
+    if len(train_groups.intersection(val_groups)) == 0:
+        print("✅ INTEGRITY CHECK PASSED: No patient overlap.")
     else:
-        print("✅ No Leakage (This is unlikely with random split).")
+        print("❌ LEAKAGE DETECTED: Patients overlap between Train and Val!")
         
     # Check Class Balance
     y_train = full_dataset.y[train_idx]
@@ -125,8 +127,8 @@ def main():
     weights = get_class_weights(full_dataset.y).to(device)
     criterion = nn.CrossEntropyLoss(weight=weights)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    print(f"{'Epoch':<5} | {'Loss':<8} | {'V.Acc':<7} | {'Sens':<7} | {'Spec':<7} | {'F1':<7} | {'M.S&S':<7}")
-    # print(f"{'Epoch':<5} | {'T.Loss':<8} | {'V.Loss':<8} | {'V.Acc':<7} | {'Sens':<7} | {'Spec':<7} | {'F1':<7} | {'M.S&S':<7}")
+    # print(f"{'Epoch':<5} | {'Loss':<8} | {'V.Acc':<7} | {'Sens':<7} | {'Spec':<7} | {'F1':<7} | {'M.S&S':<7}")
+    print(f"{'Epoch':<5} | {'T.Loss':<8} | {'V.Loss':<8} | {'V.Acc':<7} | {'Sens':<7} | {'Spec':<7} | {'F1':<7} | {'M.S&S':<7}")
     print("-" * 75)
     
 
@@ -143,8 +145,8 @@ def main():
         
         avg_train_loss = train_running_loss / len(train_loader)
         v_loss, acc, sens, spec, f1, mss = evaluate(model, val_loader, criterion, device)
-        print(f"{epoch+1:<5} | {avg_train_loss:<8.4f} | {acc:<7.4f} | {sens:<7.4f} | {spec:<7.4f} | {f1:<7.4f} | {mss:<7.4f}")
-        # print(f"{epoch+1:<5} | {avg_train_loss:<8.4f} | {v_loss:<8.4f} | {acc:<7.4f} | {sens:<7.4f} | {spec:<7.4f} | {f1:<7.4f} | {mss:<7.4f}")
+        # print(f"{epoch+1:<5} | {avg_train_loss:<8.4f} | {acc:<7.4f} | {sens:<7.4f} | {spec:<7.4f} | {f1:<7.4f} | {mss:<7.4f}")
+        print(f"{epoch+1:<5} | {avg_train_loss:<8.4f} | {v_loss:<8.4f} | {acc:<7.4f} | {sens:<7.4f} | {spec:<7.4f} | {f1:<7.4f} | {mss:<7.4f}")
         
         # Save per epoch
         torch.save(model.state_dict(), os.path.join(SAVE_DIR, f"epoch_{epoch+1}.pth"))

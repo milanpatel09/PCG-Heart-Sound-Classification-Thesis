@@ -9,7 +9,8 @@ RAW_DATA_PATH = 'data/raw'
 PROCESSED_DATA_PATH = 'data/processed'
 TARGET_SR = 1000
 WINDOW_SECONDS = 5
-FOLDERS = ['training-a', 'training-b', 'training-c', 'training-d', 'training-e', 'training-f']
+FOLDERS = ['validation']
+# FOLDERS = ['training-a', 'training-b', 'training-c', 'training-d', 'training-e', 'training-f']
 
 def generate_groups():
     print("--- Rebuilding Patient Index (Groups) ---")
